@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🥘 Mise en Place</title>
+  <title>Mise en Place</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', sans-serif; background: #fdf8f2; color: #2d1f0e; min-height: 100vh; }
@@ -116,30 +116,30 @@
 <div id="header">
   <div id="header-inner">
     <div>
-      <div id="logo">🥘 Mise en Place</div>
+      <div id="logo">Mise en Place</div>
       <div id="tagline">Your personal cooking companion</div>
     </div>
     <div id="recipe-count">...</div>
   </div>
   <div id="nav">
-    <button class="nav-btn active" onclick="showView('pick')">🍽 Cook Today</button>
-    <button class="nav-btn" onclick="showView('recommend')">✨ Recommend</button>
-    <button class="nav-btn" onclick="showView('recipes')">📋 My Recipes</button>
+    <button class="nav-btn active" onclick="showView('pick')">Cook Today</button>
+    <button class="nav-btn" onclick="showView('recommend')">Recommend</button>
+    <button class="nav-btn" onclick="showView('recipes')">My Recipes</button>
     <button class="nav-btn" onclick="showView('add')">+ Add</button>
   </div>
 </div>
 
 <div id="content">
-  <div id="view-pick" class="view active"><div class="loading">Loading recipes…</div></div>
+  <div id="view-pick" class="view active"><div class="loading">Loading recipes...</div></div>
   <div id="view-checklist" class="view">
     <div id="checklist-wrap">
-      <button id="back-btn" onclick="showView('pick')">← Back</button>
+      <button id="back-btn" onclick="showView('pick')">Back</button>
       <div id="checklist-header">
         <div id="checklist-title"></div>
         <div id="checklist-progress"></div>
       </div>
       <div id="progress-bar"><div id="progress-fill"></div></div>
-      <div id="all-done-banner">🎉 You've got everything! Time to cook.</div>
+      <div id="all-done-banner">You've got everything! Time to cook.</div>
       <div id="checklist-list"></div>
       <button id="reset-btn" onclick="resetChecklist()">Reset checklist</button>
     </div>
@@ -148,18 +148,18 @@
     <div class="section-title">What should I cook?</div>
     <div class="section-sub">Tell me what you're after and I'll find the best matches.</div>
     <div id="rec-filters">
-      <label class="form-label">🧠 Mood or craving <span class="form-hint">(optional)</span></label>
-      <input id="rec-mood" type="text" placeholder="e.g. something light, comfort food, quick lunch…" />
-      <label class="form-label" style="margin-top:14px">🥦 Ingredients I have <span class="form-hint">(comma-separated, optional)</span></label>
-      <textarea id="rec-ings" rows="2" class="form-input" placeholder="e.g. eggs, banana, garlic…"></textarea>
-      <label class="form-label" style="margin-top:14px">🏷 Filter by tag <span class="form-hint">(tap to select)</span></label>
+      <label class="form-label">Mood or craving <span class="form-hint">(optional)</span></label>
+      <input id="rec-mood" type="text" placeholder="e.g. something light, comfort food, quick lunch..." />
+      <label class="form-label" style="margin-top:14px">Ingredients I have <span class="form-hint">(comma-separated, optional)</span></label>
+      <textarea id="rec-ings" rows="2" class="form-input" placeholder="e.g. eggs, banana, garlic..."></textarea>
+      <label class="form-label" style="margin-top:14px">Filter by tag <span class="form-hint">(tap to select)</span></label>
       <div class="tag-filter-row" id="tag-filters"></div>
       <button id="rec-btn" onclick="runRecommend()">Find Recipes</button>
     </div>
     <div id="rec-empty">No matches found. Try different filters or add more recipes!</div>
     <div id="rec-results"></div>
   </div>
-  <div id="view-recipes" class="view"><div class="loading">Loading…</div></div>
+  <div id="view-recipes" class="view"><div class="loading">Loading...</div></div>
   <div id="view-add" class="view">
     <div id="add-wrap">
       <div id="add-card">
@@ -196,11 +196,14 @@
     vegetarian: ['vegetarian','vegan','veggie'], spicy: ['spicy','chili','hot'],
   };
 
-  // ── Supabase helpers ───────────────────────────────────
   async function loadRecipes() {
     const { data, error } = await sb.from('Recipes').select('*').order('id');
-    if (error) { showToast('Error loading recipes'); return; }
-    recipes = data.map(r => ({
+    if (error) {
+      console.error('Supabase error:', error);
+      document.getElementById('view-pick').innerHTML = '<div class="empty">Error loading recipes: ' + error.message + '</div>';
+      return;
+    }
+    recipes = (data || []).map(r => ({
       id: r.id,
       name: r.Name,
       ingredients: r.Ingredients ? r.Ingredients.split('|') : [],
@@ -235,7 +238,6 @@
     return true;
   }
 
-  // ── Toast ──────────────────────────────────────────────
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -243,7 +245,6 @@
     setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  // ── Navigation ─────────────────────────────────────────
   function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById('view-' + name).classList.add('active');
@@ -261,24 +262,20 @@
     document.getElementById('recipe-count').textContent = recipes.length + ' recipe' + (recipes.length !== 1 ? 's' : '');
   }
 
-  // ── Pick ───────────────────────────────────────────────
   function renderPick() {
     const grid = document.getElementById('view-pick');
     if (recipes.length === 0) {
-      grid.innerHTML = '<div class="section-title">What are you cooking today?</div><div class="section-sub">Pick a recipe to get your ingredient checklist.</div><div class="empty">No recipes yet — add some first!</div>';
+      grid.innerHTML = '<div class="section-title">What are you cooking today?</div><div class="section-sub">Pick a recipe to get your ingredient checklist.</div><div class="empty">No recipes yet - add some first!</div>';
       return;
     }
     grid.innerHTML = '<div class="section-title">What are you cooking today?</div><div class="section-sub">Pick a recipe to get your ingredient checklist.</div><div id="pick-grid">' +
-      recipes.map(r => `
-        <div class="pick-card" onclick="openChecklist(${r.id})">
-          <div class="pick-card-name">${esc(r.name)}</div>
-          ${r.tags.length ? `<div class="tag-row">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
-          <div class="pick-card-count">${r.ingredients.length} ingredient${r.ingredients.length!==1?'s':''}</div>
-          <div class="pick-arrow">Get checklist →</div>
-        </div>`).join('') + '</div>';
+      recipes.map(r => '<div class="pick-card" onclick="openChecklist(' + r.id + ')">' +
+        '<div class="pick-card-name">' + esc(r.name) + '</div>' +
+        (r.tags.length ? '<div class="tag-row">' + r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
+        '<div class="pick-card-count">' + r.ingredients.length + ' ingredient' + (r.ingredients.length !== 1 ? 's' : '') + '</div>' +
+        '<div class="pick-arrow">Get checklist</div></div>').join('') + '</div>';
   }
 
-  // ── Checklist ──────────────────────────────────────────
   function openChecklist(id) {
     selectedRecipe = recipes.find(r => r.id === id);
     checkedItems = {};
@@ -295,17 +292,16 @@
     document.getElementById('progress-fill').style.width = (got / total * 100) + '%';
     document.getElementById('progress-fill').style.background = got === total ? '#5a9e6f' : '#c8a96e';
     document.getElementById('all-done-banner').style.display = got === total ? 'block' : 'none';
-    document.getElementById('checklist-list').innerHTML = selectedRecipe.ingredients.map(ing => `
-      <div class="check-row" onclick="toggleItem('${esc(ing)}')">
-        <div class="checkbox ${checkedItems[ing]?'checked':''}"><span class="checkmark">✓</span></div>
-        <span class="ing-label ${checkedItems[ing]?'checked':''}">${esc(ing)}</span>
-      </div>`).join('');
+    document.getElementById('checklist-list').innerHTML = selectedRecipe.ingredients.map(ing =>
+      '<div class="check-row" onclick="toggleItem(\'' + esc(ing) + '\')">' +
+      '<div class="checkbox ' + (checkedItems[ing] ? 'checked' : '') + '"><span class="checkmark">check</span></div>' +
+      '<span class="ing-label ' + (checkedItems[ing] ? 'checked' : '') + '">' + esc(ing) + '</span></div>'
+    ).join('');
   }
 
   function toggleItem(ing) { checkedItems[ing] = !checkedItems[ing]; renderChecklist(); }
   function resetChecklist() { checkedItems = {}; renderChecklist(); }
 
-  // ── Recommend ──────────────────────────────────────────
   function allTags() {
     const s = new Set();
     recipes.forEach(r => r.tags.forEach(t => s.add(t)));
@@ -316,7 +312,7 @@
     const row = document.getElementById('tag-filters');
     const tags = allTags();
     if (tags.length === 0) { row.innerHTML = '<span style="color:#a08060;font-size:13px">No tags yet.</span>'; return; }
-    row.innerHTML = tags.map(t => `<span class="tag-filter ${selectedTags.has(t)?'selected':''}" onclick="toggleTag('${esc(t)}')">${esc(t)}</span>`).join('');
+    row.innerHTML = tags.map(t => '<span class="tag-filter ' + (selectedTags.has(t) ? 'selected' : '') + '" onclick="toggleTag(\'' + esc(t) + '\')">' + esc(t) + '</span>').join('');
   }
 
   function toggleTag(t) {
@@ -331,7 +327,7 @@
       const matched = requiredTags.filter(t => rTagsLow.includes(t.toLowerCase()));
       if (matched.length === 0) return null;
       score += matched.length * 10;
-      reasons.push(`tagged ${matched.join(', ')}`);
+      reasons.push('tagged ' + matched.join(', '));
     }
     if (haveIngs.length > 0) {
       const rIngsLow = r.ingredients.map(i => i.toLowerCase());
@@ -339,7 +335,7 @@
       if (matched.length > 0) {
         score += matched.length * 5;
         const pct = Math.round(matched.length / r.ingredients.length * 100);
-        reasons.push(`you have ${matched.length} of ${r.ingredients.length} ingredients (${pct}%)`);
+        reasons.push('you have ' + matched.length + ' of ' + r.ingredients.length + ' ingredients (' + pct + '%)');
       }
     }
     if (moodWords.length > 0) {
@@ -347,7 +343,7 @@
       let moodHits = 0;
       for (const word of moodWords) {
         if (rText.includes(word)) { moodHits++; continue; }
-        for (const [, synonyms] of Object.entries(MOOD_MAP)) {
+        for (const synonyms of Object.values(MOOD_MAP)) {
           if (synonyms.includes(word) && synonyms.some(s => rText.includes(s))) { moodHits++; break; }
         }
       }
@@ -370,54 +366,33 @@
     if (scored.length === 0) { resultsEl.innerHTML = ''; emptyEl.style.display = 'block'; return; }
     emptyEl.style.display = 'none';
     const maxScore = scored[0].score;
-    resultsEl.innerHTML = scored.map(({ recipe: r, score, reasons }) => {
+    resultsEl.innerHTML = scored.map(function(item) {
+      const r = item.recipe, score = item.score, reasons = item.reasons;
       const pct = Math.round(score / maxScore * 100);
       const isHigh = pct >= 70;
-      const label = pct >= 80 ? '⭐ Great match' : pct >= 50 ? 'Good match' : 'Possible match';
-      return `<div class="rec-card">
-        <div class="rec-card-top"><div class="rec-card-name">${esc(r.name)}</div><span class="rec-score ${isHigh?'high':''}">${label}</span></div>
-        ${r.tags.length ? `<div class="tag-row">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
-        ${reasons.length ? `<div class="rec-reason">✓ ${reasons.join(' · ')}</div>` : ''}
-        <button class="rec-cook-btn" onclick="openChecklist(${r.id})">Cook this → get checklist</button>
-      </div>`;
+      const label = pct >= 80 ? 'Great match' : pct >= 50 ? 'Good match' : 'Possible match';
+      return '<div class="rec-card">' +
+        '<div class="rec-card-top"><div class="rec-card-name">' + esc(r.name) + '</div><span class="rec-score ' + (isHigh ? 'high' : '') + '">' + label + '</span></div>' +
+        (r.tags.length ? '<div class="tag-row">' + r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
+        (reasons.length ? '<div class="rec-reason">' + reasons.join(' - ') + '</div>' : '') +
+        '<button class="rec-cook-btn" onclick="openChecklist(' + r.id + ')">Cook this - get checklist</button></div>';
     }).join('');
   }
 
-  // ── Recipes ────────────────────────────────────────────
   function renderRecipes() {
     updateCount();
     const grid = document.getElementById('view-recipes');
     if (recipes.length === 0) { grid.innerHTML = '<div class="empty">No recipes yet. Add some!</div>'; return; }
     grid.innerHTML = '<div id="recipe-grid">' + recipes.map(r => {
-      if (editingId === r.id) return `
-        <div class="recipe-card">
-          <div class="ingredient-label">Editing Recipe</div>
-          <div class="edit-form">
-            <label class="form-label">Name</label>
-            <input class="form-input" id="edit-name-${r.id}" value="${esc(r.name)}" />
-            <label class="form-label">Ingredients <span class="form-hint">(comma-separated)</span></label>
-            <textarea class="form-input" id="edit-ings-${r.id}" rows="3">${esc(r.ingredients.join(', '))}</textarea>
-            <label class="form-label">Tags <span class="form-hint">(comma-separated)</span></label>
-            <input class="form-input" id="edit-tags-${r.id}" value="${esc(r.tags.join(', '))}" />
-            <div class="edit-actions">
-              <button class="save-btn" onclick="saveEdit(${r.id})">Save</button>
-              <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
-            </div>
-          </div>
-        </div>`;
-      return `
-        <div class="recipe-card">
-          <div class="recipe-header">
-            <div class="recipe-name">${esc(r.name)}</div>
-            <div class="card-btns">
-              <button class="edit-btn" onclick="startEdit(${r.id})">✎</button>
-              <button class="delete-btn" onclick="deleteRecipe(${r.id})">✕</button>
-            </div>
-          </div>
-          ${r.tags.length ? `<div class="tag-row">${r.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
-          <div class="ingredient-label">Ingredients</div>
-          <div class="ingredient-list">${r.ingredients.map(i=>`<span class="ingredient-item">• ${esc(i)}</span>`).join('')}</div>
-        </div>`;
+      if (editingId === r.id) return '<div class="recipe-card"><div class="ingredient-label">Editing Recipe</div><div class="edit-form">' +
+        '<label class="form-label">Name</label><input class="form-input" id="edit-name-' + r.id + '" value="' + esc(r.name) + '" />' +
+        '<label class="form-label">Ingredients <span class="form-hint">(comma-separated)</span></label><textarea class="form-input" id="edit-ings-' + r.id + '" rows="3">' + esc(r.ingredients.join(', ')) + '</textarea>' +
+        '<label class="form-label">Tags <span class="form-hint">(comma-separated)</span></label><input class="form-input" id="edit-tags-' + r.id + '" value="' + esc(r.tags.join(', ')) + '" />' +
+        '<div class="edit-actions"><button class="save-btn" onclick="saveEdit(' + r.id + ')">Save</button><button class="cancel-btn" onclick="cancelEdit()">Cancel</button></div></div></div>';
+      return '<div class="recipe-card"><div class="recipe-header"><div class="recipe-name">' + esc(r.name) + '</div>' +
+        '<div class="card-btns"><button class="edit-btn" onclick="startEdit(' + r.id + ')">Edit</button><button class="delete-btn" onclick="deleteRecipe(' + r.id + ')">Delete</button></div></div>' +
+        (r.tags.length ? '<div class="tag-row">' + r.tags.map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
+        '<div class="ingredient-label">Ingredients</div><div class="ingredient-list">' + r.ingredients.map(i => '<span class="ingredient-item">- ' + esc(i) + '</span>').join('') + '</div></div>';
     }).join('') + '</div>';
   }
 
@@ -431,7 +406,7 @@
     if (!name) return;
     const ok = await updateRecipe(id, name, ings, tags);
     if (ok) {
-      recipes = recipes.map(r => r.id === id ? { ...r, name, ingredients: ings, tags } : r);
+      recipes = recipes.map(r => r.id === id ? Object.assign({}, r, { name, ingredients: ings, tags }) : r);
       showToast('Recipe updated!');
     }
     editingId = null; renderRecipes();
@@ -440,20 +415,15 @@
   async function deleteRecipe(id) {
     if (!confirm('Delete this recipe?')) return;
     const ok = await removeRecipe(id);
-    if (ok) {
-      recipes = recipes.filter(r => r.id !== id);
-      showToast('Recipe deleted');
-      renderRecipes();
-    }
+    if (ok) { recipes = recipes.filter(r => r.id !== id); showToast('Recipe deleted'); renderRecipes(); }
   }
 
-  // ── Add ────────────────────────────────────────────────
   async function addRecipe() {
     const name = document.getElementById('add-name').value.trim();
     const ings = document.getElementById('add-ingredients').value.split(',').map(s => s.trim()).filter(Boolean);
     const tags = document.getElementById('add-tags').value.split(',').map(s => s.trim()).filter(Boolean);
     if (!name || ings.length === 0) { alert('Please enter a name and at least one ingredient.'); return; }
-    document.getElementById('submit-btn').textContent = 'Saving…';
+    document.getElementById('submit-btn').textContent = 'Saving...';
     const newR = await insertRecipe(name, ings, tags);
     if (newR) {
       recipes.push(newR);
@@ -467,12 +437,10 @@
     document.getElementById('submit-btn').textContent = 'Save Recipe';
   }
 
-  // ── Utils ──────────────────────────────────────────────
   function esc(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  // ── Init ───────────────────────────────────────────────
   loadRecipes().then(() => renderPick());
 </script>
 </body>
